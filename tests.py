@@ -4,12 +4,11 @@ import pytest
 # класс TestBooksCollector объединяет набор тестов, которыми мы покрываем наше приложение BooksCollector
 # обязательно указывать префикс Test
 class TestBooksCollector:
-    """
-    Тест добавления новой книги.
-    Проверяет корректность работы метода add_new_book:
-    1. Добавляем две книги.
-    Ожидаемый результат: обе книги добавились в словарь books_genre.
-    """
+
+    # пример теста:
+    # обязательно указывать префикс test_
+    # дальше идет название метода, который тестируем add_new_book_
+    # затем, что тестируем add_two_books - добавление двух книг
     def test_add_new_book_add_two_books(self):
         # создаем экземпляр (объект) класса BooksCollector
         collector = BooksCollector()
@@ -21,6 +20,18 @@ class TestBooksCollector:
         # проверяем, что добавилось именно две
         # словарь books_rating, который нам возвращает метод get_books_rating, имеет длину 2
         assert len(collector.get_books_genre()) == 2
+
+    """
+    Тест добавления новой книги с валидным названием.
+    Проверяет корректность работы метода add_new_book:
+    1. Добавляе книгу.
+    Ожидаемый результат: книга добавилена в словарь books_genre.
+    """
+    def test_add_new_book_valid_name(self):
+        collector = BooksCollector()
+        book_name = "50 оттенков серого"
+        collector.add_new_book(book_name)
+        assert book_name in collector.get_books_genre()
 
     """
     Параметризованный тест проверки валидации длины названия книги.
@@ -56,23 +67,39 @@ class TestBooksCollector:
         assert collector.get_book_genre(book_name) == genre
 
     """
-    Параметризованный тест для проверки обработки некорректных сценариев при установке жанра.
-    Тестируются два случая:
-    - попытка установить жанр, отсутствующий в списке доступных (genre not in self.genre);
-    - попытка установить жанр для книги, которой нет в словаре books_genre.
-    Ожидаемый результат: жанр не устанавливается в обоих случаях.
+    Тест попытки установки недопустимого жанра.
+    Проверяет, что жанр не устанавливается, если он отсутствует в списке self.genre.
+    Сценарий:
+    1. Создаём экземпляр BooksCollector.
+    2. Добавляем книгу 'Хоббит'.
+    3. Пытаемся установить ей жанр 'Романтика', которого нет в self.genre.
+    4. Проверяем, что жанр книги не стал равен 'Романтика'.
     """
-    @pytest.mark.parametrize('book_name, genre', [
-        ('Хоббит', 'Романтика'),  # жанр 'Романтика' отсутствует в списке доступных жанров
-        ('Неизвестная книга', 'Фантастика')  # книга 'Неизвестная книга' не добавлена в словарь
-    ])
-    def test_set_book_genre_invalid_cases(self, book_name, genre):
+    def test_set_book_genre_invalid_genre(self):
         collector = BooksCollector()
-        if book_name != 'Неизвестная книга':  # добавляем книгу, если она не «Неизвестная книга»
-            collector.add_new_book(book_name)
+        book_name = 'Хоббит'
+        invalid_genre = 'Романтика'
+        collector.add_new_book(book_name)
+        collector.set_book_genre(book_name, invalid_genre)
+        assert collector.get_book_genre(book_name) != invalid_genre
+
+    """
+    Тест попытки установки жанра для книги, которой нет в коллекции.
+    Проверяет, что метод корректно обрабатывает ситуацию, когда книга
+    отсутствует в словаре books_genre.
+    Сценарий:
+    1. Создаём экземпляр BooksCollector.
+    2. Не добавляем книгу 'Неизвестная книга' в коллекцию.
+    3. Пытаемся установить ей жанр 'Фантастика'.
+    4. Проверяем, что книга не появилась в словаре и жанр не установлен.
+    """
+    def test_set_book_genre_book_not_in_collection(self):
+        collector = BooksCollector()
+        book_name = 'Неизвестная книга'
+        genre = 'Фантастика'
         collector.set_book_genre(book_name, genre)
-        # если книги нет или жанр недопустимый, жанр не должен установиться
-        assert collector.get_book_genre(book_name) != genre
+        assert book_name not in collector.get_books_genre()
+        assert collector.get_book_genre(book_name) is None
 
     """
     Параметризованный тест получения списка книг по жанру.
@@ -144,6 +171,22 @@ class TestBooksCollector:
         collector.add_book_in_favorites(book_name)
         collector.delete_book_from_favorites(book_name)
         assert book_name not in collector.get_list_of_favorites_books()
+
+    """
+    Тест попытки повторного добавления книги в коллекцию.
+    Проверяет, что книга не добавляется в список повторно.
+    Шаги:
+    1. Добавляем книгу в коллекцию.
+    2. Пытаемся добавить её в коллекцию второй раз.
+    4. Проверяем, что в списке только одна копия книги.
+    """
+    def test_add_book_already_in_books_genre(self):
+        collector = BooksCollector()
+        book_name = 'Война и мир'
+        collector.add_new_book(book_name)
+        collector.add_new_book(book_name) # повторная попытка добавления
+        books = collector.get_books_genre()
+        assert len(books) == 1
 
     """
     Тест попытки повторного добавления книги в избранное.
